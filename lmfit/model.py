@@ -942,12 +942,10 @@ class Model:
                         out[name] = params[fullname].value
 
         # 3. kwargs might directly update function arguments
-        validnames = [ivar for ivar in self.independent_vars]
-        validnames.extend(self._func_allargs)
         for name, val in kwargs.items():
             if strip:
                 name = self._strip_prefix(name)
-            if name in validnames or self._func_haskeywords:
+            if name in self.independent_vars or name in self._func_allargs or self._func_haskeywords:
                 out[name] = val
 
         # 4. finally, reset any values that have overwritten parameter values
