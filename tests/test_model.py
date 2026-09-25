@@ -49,6 +49,28 @@ def test_get_reducer(option, expected_array):
     assert_allclose(func(real_array), real_array)
 
 
+def test_complex_residual_real_weights_apply_to_real_and_imag_parts():
+    """Real weights should scale both parts of a complex residual equally."""
+
+    def complex_model(x, scale):
+        return scale * (1.0 + 1.0j) * x
+
+    model = Model(complex_model)
+    params = model.make_params(scale=1.0)
+    x = np.array([1.0, 2.0])
+    data = complex_model(x, 2.0)
+    weights = np.array([0.5, 2.0])
+
+    residual = model._residual(params, data, weights, x=x)
+
+    assert_allclose(residual, np.array([0.5, 0.5, 4.0, 4.0]))
+
+    complex_weights = np.array([0.5 + 0.1j, 2.0 - 0.2j])
+    complex_residual = model._residual(params, data, complex_weights, x=x)
+
+    assert_allclose(complex_residual, np.array([0.5, 0.1, 4.0, -0.4]))
+
+
 def test_propagate_err_invalid_option():
     """Tests for ValueError when using an unsupported option."""
     z = np.array([0, 1, 2, 3, 4, 5])

@@ -883,16 +883,21 @@ class Model:
 
         diff = data - model
 
-        if diff.dtype is complex:
+        if np.iscomplexobj(diff):
             # data/model are complex
             diff = diff.ravel().view(float)
             if weights is not None:
-                if weights.dtype is complex:
+                if np.iscomplexobj(weights):
                     # weights are complex
                     weights = weights.ravel().view(float)
                 else:
                     # real weights but complex data
-                    weights = (weights + 1j * weights).ravel().view(float)
+                    # Pack real weights directly for both real and imaginary residual parts.
+                    weights = np.asarray(weights, dtype=float).ravel()
+                    packed_weights = np.empty(weights.size * 2, dtype=float)
+                    packed_weights[0::2] = weights
+                    packed_weights[1::2] = weights
+                    weights = packed_weights
         if weights is not None:
             diff *= weights
         return diff
